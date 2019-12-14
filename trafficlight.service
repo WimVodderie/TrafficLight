@@ -1,0 +1,15 @@
+[Unit]
+Description=Trafficlight
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 -u trafficlight.py
+WorkingDirectory=/home/dfe01/services/trafficlight
+StandardOut=inherit
+StandardError=inherit
+Restart=always
+User=dfe01
+
+[Install]
+WantedBy=multi-user.target
+

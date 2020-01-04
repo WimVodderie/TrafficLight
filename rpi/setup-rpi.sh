@@ -11,10 +11,13 @@ if [ 'root' != $( whoami ) ] ; then
 fi
 
 # set timezone
-echo Europe/Brussels > /etc/timezone
+rm /etc/localtime
+sed -i "s?Europe/London?Europe/Brussels?" /etc/timezone
+dpkg-reconfigure -f noninteractive tzdata
 
 # set hostname
 echo trafficlight > /etc/hostname
+sed -i "s/127.0.1.1.*raspberry/127.0.1.1\ttrafficlight/g" /etc/hosts
 
 # enable ssh
 ssh-keygen -A
@@ -27,7 +30,7 @@ sed -i /etc/default/keyboard -e "s/^XKBLAYOUT.*/XKBLAYOUT=\"us\"/"
 # set date / time
 echo -n "Enter current date-time (yyyy-mm-dd hh:mm): "
 read TIMEDATE
-date -s $TIMEDATE
+date -s "$TIMEDATE"
 
 # install some stuff
 apt update

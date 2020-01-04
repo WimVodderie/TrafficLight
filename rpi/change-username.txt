@@ -9,5 +9,6 @@ change username 'pi' to 'dfe01'
     passwd <to change to appropriate password>
     sudo apt update <just to test if  sudo still works>
     sudo passwd -l root
+    paswd  <to change the password of dfe01 to the usual>
 
 timesync: pgx119.punchgraphix.com

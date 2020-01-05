@@ -6,7 +6,7 @@
 echo "Warning: This expects a fresh install of buster lite. Run as root ( sudo ${0} )."
 
 if [ 'root' != $( whoami ) ] ; then
-  echo "Please run as root!"
+  echo "Please run with sudo!"
   exit 1;
 fi
 
@@ -35,14 +35,27 @@ date -s "$TIMEDATE"
 # install some stuff
 apt update
 apt upgrade
-atp install tmux git rpi.gpio python3-venv lsof
+apt install tmux git rpi.gpio python3-venv lsof
+
+# create mount point for udrive and add command to mount udrive to /etc/rc.local
+mkdir -p /mnt/udrive
+sed -i -e '$i # mount udrive (uid and gid are needed so that local user dfe can write to the share even when root mounted it)\nmount -t cifs //s00202/udrive /mnt/udrive -o user=dfe01,password=XBuilder,uid=$(id -u),gid=$(id -g)\n' /etc/rc.local
+
+#
+# next part of the script should be ran as normal user
+#
+NOROOTUSER=$(who -m | awk '{print $1}')
+
+sudo -u $NOROOTUSER <<"EOF"
 
 # download and install trafficlight service
 mkdir -p ~/services
 cd ~/services
 git clone https://github.com/WimVodderie/trafficlight
+cd trafficlight
 chmod +x install.sh
-. ./install.sh
+. install.sh
+cd ../..
 
 # download DoyleStatus
 mkdir -p ~/services
@@ -50,13 +63,9 @@ cd ~/services
 git clone https://github.com/WimVodderie/DoyleStatus
 cd DoyleStatus
 python3 -m venv venv
-
-# create mount point for udrive and add command to mount udrive to /etc/rc.local
-mkdir -p /mnt/udrive
-sed -i -e '$i # mount udrive (uid and gid are needed so that local user dfe can write to the share
-even when root mounted it)\nmount -t cifs //s00202/udrive /mnt/udrive -o user=dfe01,password=XBuilder,uid=$(id -u),gid=$(id -g)\n' /etc/r
-c.local
+cd ../..
 
 # get script to make the pi file system read-only
-cd ~
 git clone http://gitlab.com/larsfp/rpi-readonly
+
+EOF

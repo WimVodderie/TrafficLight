@@ -33,9 +33,9 @@ read TIMEDATE
 date -s "$TIMEDATE"
 
 # install some stuff
-apt update
-apt upgrade
-apt install tmux git rpi.gpio python3-venv lsof
+apt -y update
+apt -y upgrade
+apt -y install tmux git rpi.gpio python3-venv python3-pip lsof
 
 # create mount point for udrive and add command to mount udrive to /etc/rc.local
 mkdir -p /mnt/udrive

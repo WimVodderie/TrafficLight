@@ -15,10 +15,6 @@ rm /etc/localtime
 sed -i "s?Europe/London?Europe/Brussels?" /etc/timezone
 dpkg-reconfigure -f noninteractive tzdata
 
-# set hostname
-echo trafficlight > /etc/hostname
-sed -i "s/127.0.1.1.*raspberry/127.0.1.1\ttrafficlight/g" /etc/hosts
-
 # enable ssh
 ssh-keygen -A
 update-rc.d ssh enable
@@ -42,30 +38,36 @@ mkdir -p /mnt/udrive
 sed -i -e '$i # mount udrive (uid and gid are needed so that local user dfe can write to the share even when root mounted it)\nmount -t cifs //s00202/udrive /mnt/udrive -o user=dfe01,password=XBuilder,uid=$(id -u),gid=$(id -g)\n' /etc/rc.local
 
 #
-# next part of the script should be ran as normal user
+# deploy the Xeikon apps to /usr/local/xeikon
 #
-NOROOTUSER=$(who -m | awk '{print $1}')
+mkdir -p /usr/local/xeikon
 
-sudo -u $NOROOTUSER <<"EOF"
+# trafficlight
+if [ ! -d /usr/local/xeikon/trafficlight ]; then
+  pushd /usr/local/xeikon
+  git clone https://github.com/WimVodderie/trafficlight
+  cd trafficlight
+  chmod +x install.sh
+  . ./install.sh
+  popd
+fi
 
-# download and install trafficlight service
-mkdir -p ~/services
-cd ~/services
-git clone https://github.com/WimVodderie/trafficlight
-cd trafficlight
-chmod +x install.sh
-. install.sh
-cd ../..
-
-# download DoyleStatus
-mkdir -p ~/services
-cd ~/services
-git clone https://github.com/WimVodderie/DoyleStatus
-cd DoyleStatus
-python3 -m venv venv
-cd ../..
+# doylestatus
+if [ ! -d /usr/local/xeikon/DoyleStatus ]; then
+  pushd /usr/local/xeikon
+  git clone https://github.com/WimVodderie/DoyleStatus
+  cd DoyleStatus
+  python3 -m venv venv
+  popd
+fi
 
 # get script to make the pi file system read-only
-git clone http://gitlab.com/larsfp/rpi-readonly
+NOROOTUSER=$(who -m | awk '{print $1}')
+echo "Non-root user: $NOROOTUSER"
+if [ ! -d /home/$NOROOTUSER/rpi-readonly ]; then
+  git clone http://gitlab.com/larsfp/rpi-readonly /home/$NOROOTUSER/rpi-readonly
+fi
 
-EOF
+# set hostname - do this last
+echo trafficlight > /etc/hostname
+sed -i "s/127.0.1.1.*raspberry/127.0.1.1\ttrafficlight/g" /etc/hosts
